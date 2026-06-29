@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+.env
+*.pdf
+# macOS
+.DS_Store
+# IDE
+.idea/
+*.iml
+# Наша будущая БД
+*.db
+*.db-*

@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "crates/text-tool",
+    "shared",
+]
+resolver = "2"
+
+# Общие настройки для всех крейтов — зафиксируем версию Rust
+# и включим полезные предупреждения компилятора
+[workspace.package]
+edition = "2021"
