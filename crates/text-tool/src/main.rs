@@ -1,44 +1,44 @@
-use std::env;
 use std::fs;
 use std::process;
+use clap::Parser;
+
+const GREEN: &str = "\x1b[32m";
+const YELLOW: &str = "\x1b[33m";
+const RESET: &str = "\x1b[0m";
+
+#[derive(Parser)]
+#[command(name = "text-tool")]
+#[command(about = "Читает текстовый файл и выводит статистику")]
+struct Cli {
+    /// Путь к текстовому файлу
+    file: String,
+
+    /// Считать строки вместо байт
+    #[arg(short = 'l', long = "count-lines")]
+    count_lines: bool,
+}
 
 fn main() {
-    // 1. Собираем аргументы командной строки
-    let args: Vec<String> = env::args().collect();
+    let cli = Cli::parse();
 
-    // 2. Ищем аргумент --file
-    let file_path = match args.iter().position(|a| a == "--file") {
-        Some(index) => {
-            // --file найден, берём следующий аргумент
-            if index + 1 < args.len() {
-                args[index + 1].clone()
-            } else {
-                eprintln!("Ошибка: укажите путь к файлу после --file");
-                process::exit(1);
-            }
-        }
-        None => {
-            eprintln!("Ошибка: укажите --file <путь>");
-            process::exit(1);
-        }
-    };
-
-    // 3. Читаем файл
-    let content = match fs::read_to_string(&file_path) {
+    let content = match fs::read_to_string(&cli.file) {
         Ok(text) => text,
         Err(e) => {
-            eprintln!("Ошибка: не удалось открыть файл \"{}\": {}", file_path, e);
+            eprintln!("Ошибка: не удалось открыть файл \"{}\": {}", cli.file, e);
             process::exit(1);
         }
     };
 
-    // 4. Выводим содержимое
-    println!("Содержимое файла:");
+    println!("{}Содержимое файла:{}", GREEN, RESET);
     println!("---");
     print!("{}", content);
     println!("---");
 
-    // 5. Считаем байты
-    let byte_count = content.len();
-    println!("Прочитано {} байт.", byte_count);
+    if cli.count_lines {
+        let line_count = content.lines().count();
+        println!("{}Статистика:{} прочитано {} строк(и).", YELLOW, RESET, line_count);
+    } else {
+        let byte_count = content.len();
+        println!("{}Статистика:{} прочитано {} байт.", YELLOW, RESET, byte_count);
+    }
 }
