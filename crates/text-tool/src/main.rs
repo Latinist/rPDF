@@ -1,10 +1,6 @@
-use std::fs;
 use std::process;
 use clap::Parser;
-
-const GREEN: &str = "\x1b[32m";
-const YELLOW: &str = "\x1b[33m";
-const RESET: &str = "\x1b[0m";
+use shared::FileStats;
 
 #[derive(Parser)]
 #[command(name = "text-tool")]
@@ -21,24 +17,13 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let content = match fs::read_to_string(&cli.file) {
-        Ok(text) => text,
+    let stats = match FileStats::from_file(&cli.file) {
+        Ok(stats) => stats,
         Err(e) => {
             eprintln!("Ошибка: не удалось открыть файл \"{}\": {}", cli.file, e);
             process::exit(1);
         }
     };
 
-    println!("{}Содержимое файла:{}", GREEN, RESET);
-    println!("---");
-    print!("{}", content);
-    println!("---");
-
-    if cli.count_lines {
-        let line_count = content.lines().count();
-        println!("{}Статистика:{} прочитано {} строк(и).", YELLOW, RESET, line_count);
-    } else {
-        let byte_count = content.len();
-        println!("{}Статистика:{} прочитано {} байт.", YELLOW, RESET, byte_count);
-    }
+    stats.print_stats(cli.count_lines);
 }
