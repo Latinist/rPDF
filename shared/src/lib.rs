@@ -13,11 +13,7 @@ pub struct FileStats {
 }
 
 impl FileStats {
-    /// Читает файл и собирает статистику.
-    /// Принимает `&str` (строковый срез), а не `&String`.
-    /// Возвращает `Result` — либо готовую структуру, либо ошибку ввода-вывода.
     pub fn from_file(path: &str) -> Result<Self, io::Error> {
-        // читаем файл. Если ошибка — оператор `?` пробрасывает её наверх
         let content = fs::read_to_string(path)?;
 
         let byte_count = content.len();
@@ -31,8 +27,6 @@ impl FileStats {
         })
     }
 
-    /// Выводит содержимое и статистику в консоль.
-    /// `&self` — метод принимает ссылку на себя (не забирает владение).
     pub fn print_stats(&self, count_lines: bool) {
         println!("{}Содержимое файла:{}", GREEN, RESET);
         println!("---");
