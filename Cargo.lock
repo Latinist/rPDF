@@ -615,6 +615,7 @@ name = "text-tool"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "docx-core",
  "shared",
 ]
 

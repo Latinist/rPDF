@@ -135,7 +135,7 @@ impl std::error::Error for DocxError {}
 mod tests {
     use super::*;
     use std::io::{Cursor, Write};
-    use zip::write::{ZipWriter, FileOptions};
+    use zip::write::ZipWriter;
 
     /// Создаёт минимальный DOCX в памяти с заданным XML-контентом.
     fn create_docx(document_xml: &str) -> Vec<u8> {
@@ -148,7 +148,7 @@ mod tests {
         zip.write_all(document_xml.as_bytes()).unwrap();
 
         // [Content_Types].xml — обязателен для валидного DOCX
-        zip.start_file("[Content_Types].xml", FileOptions::<()>::default())
+        zip.start_file::<&str, ()>("[Content_Types].xml", ())
             .unwrap();
         zip.write_all(b"<?xml version=\"1.0\" encoding=\"UTF-8\"?>...")
             .unwrap();

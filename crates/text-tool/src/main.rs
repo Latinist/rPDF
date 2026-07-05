@@ -1,29 +1,84 @@
+use std::fs;
 use std::process;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use shared::FileStats;
+use docx_core::DocxContent;
 
 #[derive(Parser)]
 #[command(name = "text-tool")]
-#[command(about = "Читает текстовый файл и выводит статистику")]
+#[command(about = "Утилита для работы с текстовыми файлами и документами")]
 struct Cli {
-    /// Путь к текстовому файлу
-    file: String,
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    /// Считать строки вместо байт
-    #[arg(short = 'l', long = "count-lines")]
-    count_lines: bool,
+#[derive(Subcommand)]
+enum Commands {
+    /// Читает текстовый файл и выводит статистику
+    Read {
+        /// Путь к текстовому файлу
+        file: String,
+
+        /// Считать строки вместо байт
+        #[arg(short = 'l', long = "count-lines")]
+        count_lines: bool,
+    },
+    /// Анализирует DOCX-файл и находит теги
+    Docx {
+        /// Путь к DOCX-файлу
+        file: String,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    let stats = match FileStats::from_file(&cli.file) {
-        Ok(stats) => stats,
-        Err(e) => {
-            eprintln!("Ошибка: не удалось открыть файл \"{}\": {}", cli.file, e);
-            process::exit(1);
+    match cli.command {
+        Commands::Read { file, count_lines } => {
+            let stats = match FileStats::from_file(&file) {
+                Ok(stats) => stats,
+                Err(e) => {
+                    eprintln!("Ошибка: не удалось открыть файл \"{}\": {}", file, e);
+                    process::exit(1);
+                }
+            };
+            stats.print_stats(count_lines);
         }
-    };
+        Commands::Docx { file } => {
+            // Читаем файл как байты
+            let bytes = match fs::read(&file) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("Ошибка: не удалось прочитать файл \"{}\": {}", file, e);
+                    process::exit(1);
+                }
+            };
 
-    stats.print_stats(cli.count_lines);
+            // Парсим DOCX
+            let docx = match DocxContent::from_bytes(&bytes) {
+                Ok(d) => d,
+                Err(e) => {
+                    eprintln!("Ошибка при обработке DOCX: {}", e);
+                    process::exit(1);
+                }
+            };
+
+            // Выводим результаты
+            println!("Анализ DOCX-файла: {}\n", file);
+            println!("Параграфов: {}\n", docx.paragraph_count);
+            println!("Содержимое:");
+            println!("---");
+            println!("{}", docx.full_text);
+            println!("---\n");
+
+            if docx.tags.is_empty() {
+                println!("Найдены теги: отсутствуют");
+            } else {
+                println!("Найдены теги:");
+                for tag in &docx.tags {
+                    println!("  - {}", tag);
+                }
+            }
+        }
+    }
 }
